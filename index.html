@@ -349,7 +349,7 @@
 
     for( var i = 0; i < 8000; i++ ){
 
-      var v = toCart( 300 , Math.random() * 2 * Math.PI , Math.random()  * 2 * Math.PI);
+      var v = toCart( 300 * (.9 + Math.random() *.1) , Math.random() * 2 * Math.PI , Math.random()  * 2 * Math.PI);
       g.vertices.push( v );
 
     }
@@ -363,8 +363,20 @@
       depthWrite: false
     });
 
-    var bg = new THREE.PointCloud( g , m );
-    scene.add( bg );
+    bg1 = new THREE.PointCloud( g , m );
+    scene.add( bg1 );
+
+    bg2 = new THREE.PointCloud( g , m );
+    scene.add( bg2 );
+
+    bg2.scale.multiplyScalar( 1.4 );
+
+    bg3 = new THREE.PointCloud( g , m );
+    scene.add( bg3 );
+
+    bg3.scale.multiplyScalar( .4 );
+
+
 
   }
 
@@ -383,6 +395,19 @@
     controls.update();
 
 
+    bg1.rotation.x += .0001;
+    bg1.rotation.y += .0004;
+    bg1.rotation.z += .0002;
+
+    bg2.rotation.x -= .0003;
+    bg2.rotation.y -= .0001;
+    bg2.rotation.z += .0003;
+
+    bg3.rotation.x += .0002;
+    bg3.rotation.y -= .0002;
+    bg3.rotation.z -= .0004;
+
+   
    
     for( var i = 0; i < PARAMS.soul.repelers.value.length; i++ ){
        
