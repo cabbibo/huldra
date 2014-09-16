@@ -1,13 +1,36 @@
 <html>
 
 <head>
+
+  <link rel="stylesheet" type="text/css" href="main.css">
+
+  <meta name="twitter:card" content="photo">
+  <meta name="twitter:site" content="@cabbibo">
+  <meta name="twitter:creator" content="@cabbibo">
+  <meta name="twitter:url" content="http://cabbi.bo">
+  <meta name="twitter:title" content="Long Live Synesthesia">
+  <meta name="twitter:description" content="Long Live Synesthesia">
+  <meta name="twitter:creator" content="@cabbibo">
+  <meta name="twitter:image" content="http://cabbi.bo/image.png">
+  <meta name="twitter:image:width" content="1440">
+  <meta name="twitter:image:height" content="900">
+  <meta name="twitter:domain" content="cabbi.bo">
+  <meta itemprop="name" content="Cabbi.bo">
+  <meta itemprop="description" content="Long Live Synesthesia">
+  <meta itemprop="image" src="http://cabbi.bo/image.png">
+  <meta property="og:title" content="Cabbi.bo">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="http://cabbi.bo/image.png"/>
+  <meta property="og:site_name" content="Cabbi.bo">
+  <meta property="og:description" content="Long Live Synesthesia">
+
   <style>
 
     @font-face {
       font-family: "GeoSans";
       src: url("lib/GeosansLight.ttf");
     }
-    html{ color:#fff; background:#000; font-family:"GeoSans"; overflow:hidden }
+    html{ color:#fff; background:#000; font-family:"GeoSans"; font-size:20px; overflow:hidden }
 
     #container{
       width      : 100%;
@@ -96,6 +119,7 @@
 <script src = "lib/PhysicsRenderer.js"      ></script>
 <script src = "lib/ParticleUtils.js"        ></script>
 <script src = "lib/dat.gui.min.js"          ></script>
+<script src = "lib/Loader.js"          ></script>
 
 <script src = "GEM.js"                     ></script>
 <script src = "GUI.js"                     ></script>
@@ -115,6 +139,10 @@
   // TODO: make into loader
   var loaded = 0;
   var neededToLoad = 1;
+
+
+  var loader = new Loader();
+  loader.liftCurtain();
 
   var clock = new THREE.Clock();
 

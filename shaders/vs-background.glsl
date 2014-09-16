@@ -12,7 +12,8 @@ void main(){
 
   vNoise = snoise( position.xyz * .01 );
 
-  vPos = position* ( 1. - length(texture2D( t_audio , vec2(abs( vNoise) , 0.) )*.1));
+  vPos = position * ( 1. - length(texture2D( t_audio , vec2(abs( vNoise) , 0.) )*.1));
+
 
   //vPos = vec3( 1. );
 
