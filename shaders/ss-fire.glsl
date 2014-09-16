@@ -62,7 +62,7 @@ void main(){
 
   f -= dif;
  
-  vel += f*dT;
+  vel += f*min( .1 , dT);
   vel *= dampening;
   p += vel * 1.;//speed;*/
 
