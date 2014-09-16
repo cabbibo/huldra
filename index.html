@@ -78,7 +78,7 @@
   
   <div id="description">
 
-    <a href="https://soundcloud.com/kidsimpledubs/jhene-aiko-growing-apart-too" target="_blank">Jhene Aiko - Growing Apart Too (Kid Smpl Remix)</a>
+    <a href="http://atomnation.bandcamp.com/album/autumn-bells" target="_blank">Gidge - Huldra</a>
 
   </div>
 
@@ -114,29 +114,21 @@
 
   // TODO: make into loader
   var loaded = 0;
-  var neededToLoad = 2;
+  var neededToLoad = 1;
 
   var clock = new THREE.Clock();
 
   var audioController = new AudioController();
- audioController.mute.gain.value = 0;
-
- // var stream = new Stream(  'audio/kid.mp3',audioController  );
+  var stream = new Stream(  'audio/huldra.mp3',audioController  );
   
-  var userAudio = new UserAudio( audioController );
-
-  userAudio.onStreamCreated = function(){
-
-    onLoad();
-
-  }
-
-
   var shaders = new ShaderLoader('shaders');
 
   shaders.load( 'ss-fire' , 'fire' , 'simulation' );
   shaders.load( 'vs-fire' , 'fire' , 'vertex' );
   shaders.load( 'fs-fire' , 'fire' , 'fragment' );
+
+  shaders.load( 'vs-background' , 'background' , 'vertex' );
+  shaders.load( 'fs-background' , 'background' , 'fragment' );
   
 
   shaders.shaderSetLoaded = function(){
@@ -175,11 +167,11 @@
       
       repelers:{ type:"v3v" , value:[]},      
       repeler:{ type:"v3v" , value:[]},      
-      audioDisplacement:{ type:"f" , value : 0.5 ,  constraints:[ 0 , 2]},
+      audioDisplacement:{ type:"f" , value : 0.0 ,  constraints:[ 0 , 2]},
       lambTemp: { r:0 , b:0 , g:0 },
       specTemp: { r:0 , b:0 , g:0 },
       audioTemp: { r:0 , b:0 , g:0 },
-      custom1:{type:"f" , value: .04,  constraints:[ 0 , 1]},
+      custom1:{type:"f" , value: .04,  constraints:[ 0.00001 , 1]},
       custom2:{type:"f" , value: .31,  constraints:[ 0 , 1]},
       custom3:{type:"f" , value: 1, constraints:[ 0 , 1]},
       c_lamb:{ type:"c" , value : new THREE.Color( 0xffcc44 ) },
@@ -250,11 +242,11 @@
       50 ,
       window.innerWidth / window.innerHeight,
       .05,
-      1000
+      5000
     );
 
     // placing our camera position so it can see everything
-    camera.position.z = 30 ;
+    camera.position.z = 100 ;
     camera.lookAt( new THREE.Vector3() );
 
 
@@ -279,6 +271,8 @@
     
     controls = new THREE.TrackballControls( camera , renderer.domElement);
 
+    controls.minDistance = 1;
+    controls.maxDistance = 1000;
 
     // Making sure our renderer is always the right size
     window.addEventListener( 'resize', onWindowResize , false );
@@ -339,8 +333,38 @@
     gem = new GEM(PARAMS);
     gem.addToScene();
 
-    //toggleRepelers();
-    //toggleRepelers();
+
+    var uniforms = {
+  
+      t_audio:PARAMS.soul.t_audio,
+      sprite:{ type:"t" , value: THREE.ImageUtils.loadTexture( 'img/flare.png' ) }
+    
+
+    }
+
+    var vs = shaders.vertexShaders.background;
+    var fs = shaders.fragmentShaders.background;
+    //var g = new THREE.BoxGeometry( 500 , 500 , 500 , 50 , 50 , 50 );
+    var g = new THREE.Geometry();
+
+    for( var i = 0; i < 8000; i++ ){
+
+      var v = toCart( 300 , Math.random() * 2 * Math.PI , Math.random()  * 2 * Math.PI);
+      g.vertices.push( v );
+
+    }
+    var m = new THREE.ShaderMaterial({
+
+      uniforms: uniforms,
+      vertexShader: vs,
+      fragmentShader: fs,
+      transparent: true,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false
+    });
+
+    var bg = new THREE.PointCloud( g , m );
+    scene.add( bg );
 
   }
 
@@ -434,11 +458,11 @@
       animate();
       
    
-     /* if( stream ){
+      if( stream ){
       
         stream.play();
 
-      }*/
+      }
 
     }
 

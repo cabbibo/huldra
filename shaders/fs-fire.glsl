@@ -51,7 +51,7 @@ void main(){
 
   //gl_FragColor = vec4( vUv.x, vLife /10000., vUv.y, 1. ); //aC ; //* vec4(  1000. - vMPos.y , 100. / vMPos.y , .3, 1. );
  // gl_FragColor = vec4( vec3( .5 , .4 , .2 ) + vec3( 1. , 1. , .6 ) * aC.xyz * aC1.xyz , 1. ); //aC ; //* vec4(  1000. - vMPos.y , 100. / vMPos.y , .3, 1. );
-  gl_FragColor = vec4(  (rC + lC ) + c_audio * a * aC.xyz * custom3, 1. );
+  gl_FragColor = vec4( (rC + lC ) + vLife * c_audio * a * aC.xyz * custom3, 1. );
 
 
 

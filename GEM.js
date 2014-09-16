@@ -62,6 +62,8 @@ function GEM( params ){
 
   }
 
+  
+
   for( var propt in this.params.body ){
 
     this.uniforms[ propt ] = this.params.body[propt];
@@ -96,6 +98,9 @@ function GEM( params ){
   }else if( this.params.type === 'points' ){
     this.body = new THREE.PointCloud( this.geometry , this.material );
   }
+
+  this.soul.addBoundTexture( this.body , 't_pos' , 'output' );
+  this.soul.addBoundTexture( this.body , 't_oPos' , 'oOutput' );
 
 }
 

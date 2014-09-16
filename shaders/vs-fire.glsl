@@ -37,15 +37,15 @@ void main(){
 
   vVel = pos.xyz - oPos.xyz;
 
-  vLife = pos.w;
-
   vec3 a1 = pos.xyz - v1.xyz;
   vec3 a2 = pos.xyz - v2.xyz;
 
   vNorm = normalize( cross( a1 , a2 ) );
 
 
-  //vNorm = normalize( a1 );
+  vLife = length( pos.xyz - ogPos.xyz );
+    
+    //vNorm = normalize( a1 );
 
   //vNorm = normalize( vec3( tri1.x , tri1.y , 0. ) );
 
