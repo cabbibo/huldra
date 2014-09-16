@@ -1,0 +1,461 @@
+<html>
+
+<head>
+  <style>
+
+    @font-face {
+      font-family: "GeoSans";
+      src: url("lib/GeosansLight.ttf");
+    }
+    html{ color:#fff; background:#000; font-family:"GeoSans"; overflow:hidden }
+
+    #container{
+      width      : 100%;
+      height     : 100%;
+      position   : absolute;
+      top        : 0px;
+      left       : 0px;
+      background : #000;
+    }
+
+    #stats{
+      position  : absolute;
+      bottom    : -35px;
+
+      left      : 0px;
+      z-index   : 999;
+      opacity: .1;
+    }
+
+    a{
+      color: #fff;
+      position: absolute;
+      z-index: 999;
+    }
+
+    #loading{
+
+      width:100%;
+      text-align:center;
+      padding-top:100px;
+      font-size:25px;
+
+    }
+    
+    a{
+      color: #fff;
+      position: absolute;
+      z-index: 999;
+      bottom:5px;
+      right:10px;
+      text-decoration:none;
+      //underline:none;
+      opacity:.5;
+      font-size: 20px;
+    }
+
+    a:hover{
+
+      text-decoration:underline;
+      opacity:1;
+
+    }
+
+     #GUI{
+
+      position:fixed;
+      right:0px;
+      top:0px;
+      z-index:999;
+
+      }
+    
+    </style>
+</head>
+<body>
+
+  <div id="GUI"></div>
+  
+  <div id="description">
+
+    <a href="https://soundcloud.com/kidsimpledubs/jhene-aiko-growing-apart-too" target="_blank">Jhene Aiko - Growing Apart Too (Kid Smpl Remix)</a>
+
+  </div>
+
+
+<script src = "lib/underscore.js"           ></script>
+<script src = "lib/three.js"                ></script>
+<script src = "lib/jquery.min.js"           ></script>
+<script src = "lib/stats.min.js"            ></script>
+<script src = "lib/TrackballControls.js"    ></script>
+<script src = "lib/ShaderLoader.js"         ></script>
+<script src = "lib/UserAudio.js"            ></script>
+<script src = "lib/Stream.js"               ></script>
+<script src = "lib/AudioController.js"      ></script>
+<script src = "lib/AudioTexture.js"         ></script>
+<script src = "lib/PhysicsRenderer.js"      ></script>
+<script src = "lib/ParticleUtils.js"        ></script>
+<script src = "lib/dat.gui.min.js"          ></script>
+
+<script src = "GEM.js"                     ></script>
+<script src = "GUI.js"                     ></script>
+
+<script>
+
+  var container , camera, scene, renderer , stats;
+
+  var gem , gui;
+
+  var tv1 = new THREE.Vector3();
+  var tv2 = new THREE.Vector3();
+  var repelerMeshes = [];
+  var repelersHidden = true;
+
+
+  // TODO: make into loader
+  var loaded = 0;
+  var neededToLoad = 2;
+
+  var clock = new THREE.Clock();
+
+  var audioController = new AudioController();
+ audioController.mute.gain.value = 0;
+
+ // var stream = new Stream(  'audio/kid.mp3',audioController  );
+  
+  var userAudio = new UserAudio( audioController );
+
+  userAudio.onStreamCreated = function(){
+
+    onLoad();
+
+  }
+
+
+  var shaders = new ShaderLoader('shaders');
+
+  shaders.load( 'ss-fire' , 'fire' , 'simulation' );
+  shaders.load( 'vs-fire' , 'fire' , 'vertex' );
+  shaders.load( 'fs-fire' , 'fire' , 'fragment' );
+  
+
+  shaders.shaderSetLoaded = function(){
+   onLoad();
+  }
+
+
+
+  /*
+
+    PARAMS
+
+  */
+
+
+  var PARAMS = {
+
+    soul:{
+     
+      repulsionPower:   { type:"f" , value: 14  , constraints:[-10 , 50] },
+      repulsionRadius:  { type:"f" , value: 300 , constraints:[10 , 600] },
+      dampening:        { type:"f" , value: .98 , constraints:[.8 , .999] },
+
+      //custom1:          { type:"f" , value: 0 , constraints:[ 0 , 1] },
+      
+      repelers:         { type:"v3v" , value:[] },
+      radii:            { type:"v3v" , value:[] },
+      velocities:       { type:"v3v" , value:[] },
+      aPower:           { type:"v3v" , value:[] },
+
+      t_audio:          { type:"t" , value: audioController.texture    },
+
+    },
+
+    body:{
+      
+      repelers:{ type:"v3v" , value:[]},      
+      repeler:{ type:"v3v" , value:[]},      
+      audioDisplacement:{ type:"f" , value : 0.5 ,  constraints:[ 0 , 2]},
+      lambTemp: { r:0 , b:0 , g:0 },
+      specTemp: { r:0 , b:0 , g:0 },
+      audioTemp: { r:0 , b:0 , g:0 },
+      custom1:{type:"f" , value: .04,  constraints:[ 0 , 1]},
+      custom2:{type:"f" , value: .31,  constraints:[ 0 , 1]},
+      custom3:{type:"f" , value: 1, constraints:[ 0 , 1]},
+      c_lamb:{ type:"c" , value : new THREE.Color( 0xffcc44 ) },
+      c_spec:{ type:"c" , value : new THREE.Color( 0xffccaa) },
+      c_audio:{ type:"c" , value : new THREE.Color( 0xcc7744 ) },
+      lightPos:{type:"v3" , value: new THREE.Vector3( 10 , 1 , 1 )},
+      t_audio:    { type:"t" , value: audioController.texture    },
+
+    },
+
+    repelers:[],
+
+    vs:null,
+    fs:null,
+    ss:null,
+
+    geometry:null,
+
+
+    time:{ type:"f" , value: 0 },
+    dT:{ type:"f" , value: 0 },
+    geometryType:"icosahedron",
+    materialType:"fire",
+
+    toggle:function(){
+
+      toggleRepelers();
+
+    },
+
+    materials:{
+
+    },
+
+    geometries:{
+
+      plane: new THREE.PlaneGeometry( 30 , 30 , 100 , 100 ), 
+      icosahedron: new THREE.IcosahedronGeometry( 10 , 6 ) 
+    },
+    
+    simulations:{
+
+    }
+
+
+
+  }
+
+
+ function init(){
+
+    console.log( PARAMS );
+   
+    PARAMS.materials.fire = { 
+      vs: shaders.vertexShaders.fire,
+      fs: shaders.fragmentShaders.fire
+    }
+
+
+    gui = new GUI( PARAMS , {
+     domElement: document.getElementById( 'GUI' ) 
+    });
+
+
+    scene = new THREE.Scene();
+    
+    camera = new THREE.PerspectiveCamera( 
+      50 ,
+      window.innerWidth / window.innerHeight,
+      .05,
+      1000
+    );
+
+    // placing our camera position so it can see everything
+    camera.position.z = 30 ;
+    camera.lookAt( new THREE.Vector3() );
+
+
+    // Getting the container in the right location
+    container     = document.createElement( 'div' );
+    container.id  = 'container';
+    
+    document.body.appendChild( container );
+
+    // Getting the stats in the right position
+    stats = new Stats();
+    stats.domElement.id = 'stats';
+    document.body.appendChild( stats.domElement );
+
+
+    // Setting up our Renderer
+    renderer = new THREE.WebGLRenderer({ alpha: true });
+
+    renderer.setSize( window.innerWidth, window.innerHeight );
+    container.appendChild( renderer.domElement );
+    renderer.domElement.style.background="#000";
+    
+    controls = new THREE.TrackballControls( camera , renderer.domElement);
+
+
+    // Making sure our renderer is always the right size
+    window.addEventListener( 'resize', onWindowResize , false );
+    window.addEventListener( 'mousemove', onMouseMove , false );
+   
+  
+
+    var w = window.innerWidth ;
+    var h = window.innerHeight;
+  
+  
+    var g = new THREE.IcosahedronGeometry( .1 , 1 );
+    var m = new THREE.MeshNormalMaterial();
+
+    for( var i =0; i<25; i++ ){
+
+      var mesh = new THREE.Mesh( g , m );
+
+    /*  PARAMS.repelers.push( mesh );
+
+    }*/
+
+      var p = ( i / 25 );
+      var x = 10 * Math.cos( p * Math.PI * 2 );
+      var y = 10 * Math.sin( p * Math.PI * 2 );
+
+     // mesh.position.z = 100000;
+
+     var t = Math.random() * 2 * Math.PI;
+     var p = Math.random() * 2 * Math.PI;
+      mesh.position.x = x;
+      mesh.position.y = y;
+      mesh.position.z = 2;
+      mesh.position.copy( toCart( 12 , t , p ) );
+
+      mesh.velocity = new THREE.Vector3();
+
+     // scene.add( mesh );
+      PARAMS.soul.repelers.value.push( mesh.position );
+      PARAMS.soul.velocities.value.push( mesh.velocity );
+      PARAMS.soul.aPower.value.push( new THREE.Vector3() );
+
+
+      PARAMS.repelers.push( mesh );
+
+    }
+
+    //recreateGeometry(PARAMS.objectType);
+    //recreateMaterial(PARAMS.visualType);
+
+    PARAMS.ss = shaders.simulationShaders.fire;
+    PARAMS.vs = shaders.vertexShaders.fire;
+    PARAMS.fs = shaders.fragmentShaders.fire;
+
+    PARAMS.geometry = PARAMS.geometries[ PARAMS.geometryType ];
+    PARAMS.material = PARAMS.materials[ PARAMS.materialType ];
+    
+    gem = new GEM(PARAMS);
+    gem.addToScene();
+
+    //toggleRepelers();
+    //toggleRepelers();
+
+  }
+
+
+  function animate(){
+
+    audioController.update();
+
+    PARAMS.dT.value = clock.getDelta();
+    PARAMS.time.value += PARAMS.dT.value;
+
+    gem.update();
+
+    stats.update();
+
+    controls.update();
+
+
+   
+    for( var i = 0; i < PARAMS.soul.repelers.value.length; i++ ){
+       
+       /*var r1 = u.repelers.value[i];
+       var v1 = u.velocities.value[i];*/
+
+
+       var ind = i / (2 *  PARAMS.soul.repelers.value.length); 
+       var fI = Math.floor( ind * audioController.analyzer.array.length );
+       var p = audioController.analyzer.array[ fI ];
+
+        PARAMS.soul.aPower.value[i].x = p / 256;
+      
+
+
+       
+       //r1.add( v1 );
+
+      // v1.multiplyScalar( .95 + .05 * Math.sin( time.value ) );
+
+    }
+
+    renderer.render( scene , camera );
+
+    requestAnimationFrame( animate );
+
+  }
+
+
+  function changeRepelerPositions( newPos ){
+
+
+    for( var i = 0; i < repelerMeshes.length; i++ ){
+
+      repelerMeshes.position.copy( newPos[i] );
+    }
+
+
+  }
+
+  function onMouseMove(e ){
+
+ 
+  }
+
+  // Resets the renderer to be the proper size
+  function onWindowResize(){
+
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+
+
+    renderer.setSize( window.innerWidth, window.innerHeight );
+   
+    var dpr = devicePixelRatio || 1;
+
+    //camUniforms.SS.value.x = window.innerWidth * dpr;
+    //camUniforms.SS.value.y = window.innerHeight * dpr;
+
+
+  }
+
+
+  function onLoad(){
+
+
+    loaded ++;
+
+    console.log(loaded );
+    if( loaded === neededToLoad ){
+
+      init();
+      animate();
+      
+   
+     /* if( stream ){
+      
+        stream.play();
+
+      }*/
+
+    }
+
+  }
+
+  function toCart( r , t , p ){
+
+    var x = r *(Math.sin(t))*(Math.cos(p));
+    var y = r *(Math.sin(t))*(Math.sin(p));
+    var z = r * (Math.cos(t));
+    return new THREE.Vector3(x,y,z);
+
+  }
+
+
+</script>
+
+
+</body>
+</html>
