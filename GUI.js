@@ -11,6 +11,7 @@ function GUI( PARAMS ,  params ){
   this.PARAMS = PARAMS;
 
   this.gui = new dat.GUI({autoPlace:false});
+  this.gui.close();
 
   // TODO: make passable
   this.domElement = this.params.domElement;
